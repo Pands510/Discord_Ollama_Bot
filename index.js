@@ -7,41 +7,62 @@ const SYSTEM_INSTRUCTION = `
 
 `;
 
+const channelHistories = new Map();
+const MAX_HISTORY_LENGTH = 6;
+
 let lastRequestTime = 0;
 const COOLDOWN = 4000;
 
 client.on('ready', () => {
-    console.log(`[+] Bot conectado localmente via Ollama como: ${client.user.tag}`);
+    console.log(`[+] Bot conectado localmente com histórico de chat como: ${client.user.tag}`);
 });
 
 client.on('messageCreate', async (message) => {
-    if (message.author.id === client.user.id) return;
+
+    const isSelf = message.author.id === client.user.id;
+
+    const channelId = message.channel.id;
+    if (!channelHistories.has(channelId)) {
+        channelHistories.set(channelId, []);
+    }
+    const history = channelHistories.get(channelId);
+
+    const role = isSelf ? 'assistant' : 'user';
+    const cleanContent = message.content.replace(/<@!?\d+>/g, '').trim();
+
+    if (cleanContent) {
+        history.push({ role, content: `${message.author.username}: ${cleanContent}` });
+
+        if (history.length > MAX_HISTORY_LENGTH) {
+            history.shift();
+        }
+    }
+
+    if (isSelf) return;
+
+    const isMentioned = message.mentions.has(client.user) || message.content.toLowerCase().includes('NOME_GATILHO');
+    const CHANCE_DE_RESPONDER = 1.0; 
+
+    if (!isMentioned && Math.random() > CHANCE_DE_RESPONDER) return;
 
     const now = Date.now();
     if (now - lastRequestTime < COOLDOWN) return;
-
-    const CHANCE_DE_RESPONDER = 1.0; 
-    
-    const isMentioned = message.mentions.has(client.user) || message.content.toLowerCase().includes('NOME_GATILHO');
-    
-    if (!isMentioned && Math.random() > CHANCE_DE_RESPONDER) return;
-
     lastRequestTime = now;
 
     try {
         await message.channel.sendTyping();
 
-        const userMessage = message.content.replace(/<@!?\d+>/g, '').trim();
+        const messagesPayload = [
+            { role: 'system', content: SYSTEM_INSTRUCTION },
+            ...history
+        ];
 
         const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'llama3',
-                messages: [
-                    { role: 'system', content: SYSTEM_INSTRUCTION },
-                    { role: 'user', content: userMessage || 'Oi' }
-                ],
+                messages: messagesPayload,
                 stream: false,
                 options: {
                     num_predict: 150,
@@ -54,6 +75,11 @@ client.on('messageCreate', async (message) => {
         const replyText = responseData.message?.content ? responseData.message.content.trim() : null;
 
         if (!replyText) return;
+
+        history.push({ role: 'assistant', content: replyText });
+        if (history.length > MAX_HISTORY_LENGTH) {
+            history.shift();
+        }
 
         await message.reply(replyText);
 
