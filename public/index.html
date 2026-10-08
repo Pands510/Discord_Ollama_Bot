@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Painel de Controle — Bot</title>
+
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #171a23;
+            --surface-2: #1d212c;
+            --border: #2a3040;
+            --text: #eef2ff;
+            --muted: #9aa4b8;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #34d399;
+            --danger: #fb7185;
+            --warning: #fbbf24;
+            --shadow: 0 20px 60px rgba(0,0,0,.28);
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 0%, rgba(139,92,246,.14), transparent 32rem),
+                radial-gradient(circle at 90% 15%, rgba(59,130,246,.10), transparent 28rem),
+                var(--bg);
+        }
+
+        button, input, textarea { font: inherit; }
+
+        .page {
+            width: min(980px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 42px 0 56px;
+        }
+
+        .hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: #a78bfa;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            line-height: 1.1;
+            letter-spacing: -.035em;
+        }
+
+        .subtitle {
+            max-width: 650px;
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(23,26,35,.78);
+            color: var(--muted);
+            font-size: .85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--warning);
+            box-shadow: 0 0 0 4px rgba(251,191,36,.10);
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(52,211,153,.10);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(280px, .75fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(23,26,35,.88);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 22px 24px 16px;
+            border-bottom: 1px solid rgba(42,48,64,.72);
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .card-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: .88rem;
+            line-height: 1.5;
+        }
+
+        .card-body { padding: 22px 24px 24px; }
+
+        .field + .field { margin-top: 20px; }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: #dce2f2;
+            font-size: .9rem;
+            font-weight: 700;
+        }
+
+        .required {
+            color: var(--danger);
+            font-size: .75rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            background: var(--surface-2);
+            color: var(--text);
+            transition: border-color .18s, box-shadow .18s, background .18s;
+        }
+
+        input {
+            min-height: 44px;
+            padding: 10px 12px;
+        }
+
+        textarea {
+            min-height: 180px;
+            padding: 12px;
+            resize: vertical;
+            line-height: 1.55;
+        }
+
+        input::placeholder, textarea::placeholder { color: #697388; }
+
+        input:focus, textarea:focus {
+            border-color: rgba(139,92,246,.8);
+            background: #202533;
+            box-shadow: 0 0 0 3px rgba(139,92,246,.14);
+        }
+
+        .hint {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: .78rem;
+            line-height: 1.45;
+        }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .status-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(42,48,64,.65);
+        }
+
+        .status-row:last-child { border-bottom: 0; }
+
+        .status-label {
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+        .status-value {
+            text-align: right;
+            color: #e5e9f5;
+            font-size: .86rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .status-value.ok { color: var(--success); }
+        .status-value.bad { color: var(--danger); }
+
+        .save-bar {
+            position: sticky;
+            bottom: 14px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            padding: 12px 14px 12px 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(15,17,23,.86);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 14px 40px rgba(0,0,0,.28);
+        }
+
+        .save-note {
+            color: var(--muted);
+            font-size: .78rem;
+        }
+
+        .save-button {
+            min-width: 190px;
+            min-height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--accent);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .15s, background .15s, opacity .15s;
+        }
+
+        .save-button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .save-button:active { transform: translateY(0); }
+        .save-button:disabled { cursor: wait; opacity: .65; transform: none; }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: .86rem;
+            font-weight: 700;
+        }
+
+        .message.success {
+            border: 1px solid rgba(52,211,153,.25);
+            background: rgba(52,211,153,.10);
+            color: #86efac;
+        }
+
+        .message.error {
+            border: 1px solid rgba(251,113,133,.25);
+            background: rgba(251,113,133,.10);
+            color: #fda4af;
+        }
+
+        .footer {
+            margin-top: 22px;
+            text-align: center;
+            color: #687286;
+            font-size: .75rem;
+        }
+
+        @media (max-width: 760px) {
+            .page { width: min(100% - 20px, 680px); padding-top: 24px; }
+            .hero { flex-direction: column; }
+            .grid { grid-template-columns: 1fr; }
+            .two-columns { grid-template-columns: 1fr; }
+            .card-body, .card-header { padding-left: 18px; padding-right: 18px; }
+            .save-bar { align-items: stretch; flex-direction: column; }
+            .save-button { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Administração</p>
+                <h1>Configuração do Bot</h1>
+                <p class="subtitle">
+                    Ajuste o comportamento, personalidade e parâmetros de resposta do seu bot
+                    em um único painel.
+                </p>
+            </div>
+
+            <div class="status-pill" id="connectionPill">
+                <span class="status-dot" id="connectionDot"></span>
+                <span id="connectionText">Verificando...</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <section class="card">
+                <div class="card-header">
+                    <h2>Comportamento e personalidade</h2>
+                    <p>Defina como a IA deve se comunicar e quando reconhecer o gatilho.</p>
+                </div>
+
+                <div class="card-body">
+                    <form id="configForm">
+                        <div class="field">
+                            <label for="systemInstruction">
+                                Prompt da IA / Personalidade
+                            </label>
+                            <textarea
+                                id="systemInstruction"
+                                name="systemInstruction"
+                                placeholder="Descreva a personalidade, tom de voz e forma de conversar..."
+                            ></textarea>
+                            <div class="hint">
+                                As regras de decisão são adicionadas automaticamente pelo sistema.
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="triggerName">Nome de gatilho</label>
+                            <input
+                                type="text"
+                                id="triggerName"
+                                name="triggerName"
+                                placeholder="Ex.: @bot ou nome do personagem"
+                            >
+                            <div class="hint">
+                                Uma menção ou referência direta ao gatilho aumenta bastante a prioridade de resposta.
+                            </div>
+                        </div>
+
+                        <div class="field two-columns">
+                            <div>
+                                <label for="chanceToRespond">Chance espontânea</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="1"
+                                    id="chanceToRespond"
+                                    name="chanceToRespond"
+                                    required
+                                >
+                                <div class="hint">0,06 ≈ 6% em uma mensagem normal.</div>
+                            </div>
+
+                            <div>
+                                <label for="maxHistoryLength">Histórico máximo</label>
+                                <input
+                                    type="number"
+                                    min="2"
+                                    max="50"
+                                    id="maxHistoryLength"
+                                    name="maxHistoryLength"
+                                    required
+                                >
+                                <div class="hint">Quantidade de mensagens mantidas em contexto.</div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ollamaModel">Modelo do Ollama</label>
+                            <input
+                                type="text"
+                                id="ollamaModel"
+                                name="ollamaModel"
+                                placeholder="Ex.: llama3"
+                                required
+                            >
+                        </div>
+
+                        <div class="field two-columns">
+                            <div>
+                                <label for="cooldown">Cooldown por canal (ms)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="300000"
+                                    id="cooldown"
+                                    name="cooldown"
+                                    required
+                                >
+                                <div class="hint">Tempo mínimo entre respostas no mesmo canal.</div>
+                            </div>
+
+                            <div>
+                                <label for="responseDelayMin">Delay mínimo (ms)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="30000"
+                                    id="responseDelayMin"
+                                    name="responseDelayMin"
+                                    required
+                                >
+                                <div class="hint">Atraso mínimo antes da resposta.</div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="responseDelayMax">Delay máximo (ms)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="30000"
+                                id="responseDelayMax"
+                                name="responseDelayMax"
+                                required
+                            >
+                            <div class="hint">Atraso máximo antes da resposta. Deve ser ≥ ao delay mínimo.</div>
+                        </div>
+
+                        <div class="message success" id="successMsg" role="status">
+                            ✓ Configurações salvas com sucesso.
+                        </div>
+
+                        <div class="message error" id="errorMsg" role="alert"></div>
+
+                        <div class="save-bar">
+                            <span class="save-note">As alterações são aplicadas após salvar.</span>
+                            <button class="save-button" id="saveButton" type="submit">
+                                Salvar configurações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <aside class="card">
+                <div class="card-header">
+                    <h2>Status do sistema</h2>
+                    <p>Informações atuais recebidas do bot.</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="status-list" id="statusList">
+                        <div class="status-row">
+                            <span class="status-label">Discord</span>
+                            <span class="status-value">Carregando...</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label">Modelo</span>
+                            <span class="status-value">—</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label">Canais em memória</span>
+                            <span class="status-value">—</span>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-label">Usuários conhecidos</span>
+                            <span class="status-value">—</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <footer class="footer">
+            Painel de configuração do bot
+        </footer>
+    </main>
+
+    <script>
+        const form = document.getElementById('configForm');
+        const successMsg = document.getElementById('successMsg');
+        const errorMsg = document.getElementById('errorMsg');
+        const saveButton = document.getElementById('saveButton');
+        const statusList = document.getElementById('statusList');
+        const connectionDot = document.getElementById('connectionDot');
+        const connectionText = document.getElementById('connectionText');
+
+        let messageTimer;
+
+        function showMessage(element, message, duration = 4000) {
+            clearTimeout(messageTimer);
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            if (message) {
+                element.textContent = message;
+                element.style.display = 'block';
+
+                messageTimer = setTimeout(() => {
+                    element.style.display = 'none';
+                }, duration);
+            }
+        }
+
+        function setConnection(online) {
+            connectionDot.classList.toggle('online', online);
+            connectionText.textContent = online ? 'Sistema conectado' : 'Sistema indisponível';
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+
+                document.getElementById('systemInstruction').value = data.systemInstruction || '';
+                document.getElementById('triggerName').value = data.triggerName || '';
+                document.getElementById('chanceToRespond').value = data.chanceToRespond ?? 0.06;
+                document.getElementById('maxHistoryLength').value = data.maxHistoryLength ?? 12;
+                document.getElementById('ollamaModel').value = data.ollamaModel || 'llama3';
+                document.getElementById('cooldown').value = data.cooldown ?? 4000;
+                document.getElementById('responseDelayMin').value = data.responseDelayMin ?? 1000;
+                document.getElementById('responseDelayMax').value = data.responseDelayMax ?? 4500;
+            } catch (error) {
+                showMessage(errorMsg, 'Não foi possível carregar a configuração.');
+            }
+        }
+
+        async function loadStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (!response.ok) throw new Error('Status HTTP inválido');
+
+                const data = await response.json();
+
+                const discordConfigured = Boolean(data.discordTokenConfigured);
+
+                statusList.innerHTML = `
+                    <div class="status-row">
+                        <span class="status-label">Discord</span>
+                        <span class="status-value ${discordConfigured ? 'ok' : 'bad'}">
+                            ${discordConfigured ? '● Configurado' : '● Não configurado'}
+                        </span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">Modelo</span>
+                        <span class="status-value">${escapeHtml(data.ollamaModel ?? '—')}</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">Canais em memória</span>
+                        <span class="status-value">${escapeHtml(data.channelsInMemory ?? '0')}</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">Usuários conhecidos</span>
+                        <span class="status-value">${escapeHtml(data.usersRemembered ?? '0')}</span>
+                    </div>
+                `;
+
+                setConnection(true);
+            } catch (error) {
+                statusList.innerHTML = `
+                    <div class="status-row">
+                        <span class="status-value bad">Não foi possível obter o status.</span>
+                    </div>
+                `;
+                setConnection(false);
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const minDelay = parseInt(document.getElementById('responseDelayMin').value, 10);
+            const maxDelay = parseInt(document.getElementById('responseDelayMax').value, 10);
+
+            if (maxDelay < minDelay) {
+                showMessage(errorMsg, 'O delay máximo não pode ser menor que o delay mínimo.');
+                document.getElementById('responseDelayMax').focus();
+                return;
+            }
+
+            const formData = {
+                systemInstruction: document.getElementById('systemInstruction').value,
+                triggerName: document.getElementById('triggerName').value,
+                chanceToRespond: parseFloat(document.getElementById('chanceToRespond').value),
+                maxHistoryLength: parseInt(document.getElementById('maxHistoryLength').value, 10),
+                ollamaModel: document.getElementById('ollamaModel').value,
+                cooldown: parseInt(document.getElementById('cooldown').value, 10),
+                responseDelayMin: minDelay,
+                responseDelayMax: maxDelay
+            };
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Salvando...';
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro ao salvar.');
+                }
+
+                showMessage(successMsg, '✓ Configurações salvas com sucesso.');
+                await loadStatus();
+            } catch (error) {
+                showMessage(errorMsg, error.message || 'Não foi possível salvar as configurações.');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Salvar configurações';
+            }
+        });
+
+        loadConfig();
+        loadStatus();
+    </script>
+</body>
+</html>

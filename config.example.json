@@ -1,0 +1,10 @@
+{
+  "systemInstruction": "Você é uma pessoa casual e natural...",
+  "triggerName": "Sara",
+  "chanceToRespond": 0.06,
+  "maxHistoryLength": 24,
+  "cooldown": 4000,
+  "ollamaModel": "llama3",
+  "responseDelayMin": 1000,
+  "responseDelayMax": 4500
+}
